@@ -14,7 +14,6 @@ size = 600  # Threads + Process / Iterations
 cap = None  # thread cap
 random_threads = True  # randomises
 include_nsfw_sites = True  
-include_special_characters = True 
 
 timeout = aiohttp.ClientTimeout(total=20)
 init(autoreset=True)
@@ -119,19 +118,20 @@ async def fetch(
         try:
             required = isinstance(lol, (dict, tuple, list))
             result = (required and json.dumps(lol)) or lol
+            # result = result.format(email=sub, password=password, random=generate(), username=generate(), timestamp=str(int(time.time())))
             result = result.replace("{email}", sub).replace("{password}", password).replace("{random}", generate()).replace("{username}", generate()).replace("{timestamp}", str(int(time.time())))
             for k, v in replacements.items():
-                print(k, v)
                 result = result.replace(k, v)
+                if debugging == True:
+                    print(k, v)
             result = (required and json.loads(result)) or result
         except Exception:
-            import traceback
-            print(traceback.format_exc())
+            if debugging == True:
+                import traceback
+                print(traceback.format_exc())
         return result
 
     try:
-        # asdf
-
         requirements = info.get("requirements")
         if requirements:
             for thing in requirements:
@@ -145,9 +145,6 @@ async def fetch(
                     for header in thing.get("headers", []):
                         replacements[header.get("name")] = resp.headers.get(header.get("key"))
 
-        print(requirements)
-
-        # asdf
         url = fix(info.get("url"))
         method = info.get("method", "POST").upper()
         js = info.get("json")
@@ -162,13 +159,6 @@ async def fetch(
         headers = info.get("headers", {})
         cookies = info.get("cookies", {})
         
-        if debugging == True:
-            print("json:", js)
-            print("data:", data)
-            print("params:", params)
-            print("headers:", headers)
-            print("cookies:", cookies)
-
         async with session.request(
             method=method,
             url=url,
@@ -354,11 +344,6 @@ async def main():
                 string.ascii_uppercase,
                 string.digits,
             ]
-
-            if include_special_characters:
-                samples.append(
-                    string.punctuation
-                ) 
 
             for sample in samples:
                 password += "".join(random.sample(sample, k=5))
